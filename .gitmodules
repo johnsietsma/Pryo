@@ -1,0 +1,3 @@
+[submodule "Assets/UnityKit"]
+	path = Assets/UnityKit
+	url = https://github.com/notoes/unity-kit.git
