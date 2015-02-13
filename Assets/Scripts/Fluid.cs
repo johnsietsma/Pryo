@@ -20,31 +20,6 @@ public class Fluid : MonoBehaviour
     private Vector2 cachedVectorFieldSize;
 #endif
 
-    public void ResetVelocity()
-    {
-        vectorField.SetAll( initialVelocity );
-    }
-
-    private VectorField2 CreateVectorField()
-    {
-        var width = Mathf.Max(1,numGridsWidth);
-        var height = Mathf.Max(1,numGridsHeight);
-
-        var vf = new VectorField2( width, height );
-        vf.SetAll( initialVelocity );
-        return vf;
-    }
-
-#if UNITY_EDITOR
-    private void EnsureCorrectGridSize()
-    {
-        if( numGridsHeight!=vectorField.Height || numGridsWidth!=vectorField.Width )
-        {
-            vectorField = CreateVectorField();
-        }
-    }
-#endif
-
     private void Awake()
     {
         vectorField = CreateVectorField();
@@ -80,4 +55,28 @@ public class Fluid : MonoBehaviour
         }
     }
 
+    public void ResetVelocity()
+    {
+        vectorField.SetAll( initialVelocity );
+    }
+
+    private VectorField2 CreateVectorField()
+    {
+        var width = Mathf.Max(1,numGridsWidth);
+        var height = Mathf.Max(1,numGridsHeight);
+
+        var vf = new VectorField2( width, height );
+        vf.SetAll( initialVelocity );
+        return vf;
+    }
+
+#if UNITY_EDITOR
+    private void EnsureCorrectGridSize()
+    {
+        if( numGridsHeight!=vectorField.Height || numGridsWidth!=vectorField.Width )
+        {
+            vectorField = CreateVectorField();
+        }
+    }
+#endif
 }
