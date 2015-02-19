@@ -36,6 +36,15 @@ struct hvfFlo
   half4 WPOS;
 };
 
+
+// tex2D in screen space
+float4 f4texRECT(sampler2D tex, float2 s)
+{
+  return tex2D( tex, float2(s.x/_ScreenParams.x, s.y/_ScreenParams.y) );
+}
+
+
+
 void h4texRECTneighbors(samplerRECT tex, half2 s,
                         out half4 left,
                         out half4 right,
@@ -83,13 +92,6 @@ void f1texRECTneighbors(samplerRECT tex, float2 s,
   right  = f1texRECT(tex, s + float2(1, 0));
   bottom = f1texRECT(tex, s - float2(0, 1));
   top    = f1texRECT(tex, s + float2(0, 1));
-}
-
-
-// tex2D in screen space
-float4 f4texRECT(sampler2D tex, float2 s)
-{
-  return tex2D( tex, float2(s.x/_ScreenParams.x, s.y/_ScreenParams.y) );
 }
 
 
