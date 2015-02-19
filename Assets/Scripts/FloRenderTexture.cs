@@ -16,19 +16,24 @@ public class FloRenderTexture : MonoBehaviour {
 
     void Start()
     {
-        /*if(!SystemInfo.SupportsRenderTextureFormat(RenderTextureFormat.ARGBFloat))
+        if(!SystemInfo.SupportsRenderTextureFormat(RenderTextureFormat.ARGBFloat))
         {
             Debug.LogError("Float render textures are not supported.");
             enabled = false;
             return;
-        }*/
+        }
         renderTexture = new RenderTexture(256, 256, 0, RenderTextureFormat.ARGBFloat);
-        //Graphics.Blit( initTexture, renderTexture );
+        renderTexture.useMipMap = false;
+        renderTexture.wrapMode = TextureWrapMode.Repeat;
+        renderTexture.filterMode = FilterMode.Point;
+        Graphics.Blit( initTexture, renderTexture );
         displayMaterial.mainTexture = renderTexture;
     }
 
-    void OnPostRender()
+    void OnRenderObject()
     {
-        Graphics.Blit(initTexture, renderTexture, renderMaterial);
+        var rt = RenderTexture.active;
+        Graphics.Blit(renderTexture, renderTexture, renderMaterial);
+        RenderTexture.active = rt;
     }
 }

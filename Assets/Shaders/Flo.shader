@@ -24,8 +24,8 @@
 			float _GridScale;
 
 	        fixed4 frag(v2f_img i) : COLOR {
-				float time = _Time;
-				//float time = unity_DeltaTime;
+				//float time = _Time;
+				float time = unity_DeltaTime;
 				FloTexelSize = _MainTex_TexelSize.zw;
 				float2 sp = i.uv*FloTexelSize;
 				return advect( sp, time, _Dissipation, 1/_GridScale, _VelocityField, _MainTex );
