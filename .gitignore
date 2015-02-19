@@ -14,6 +14,7 @@ build_settings
 /Obj/
 /UnityGenerated/
 /Library/
+UnityVS.*.*
 
 # ===================================== #
 # Visual Studio / MonoDevelop generated #

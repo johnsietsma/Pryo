@@ -1,3 +1,9 @@
+#ifndef FLO_CG_INCLUDED
+#define FLO_CG_INCLUDED
+
+
+// Upgrade NOTE: replaced 'samplerRECT' with 'sampler2D'
+
 //----------------------------------------------------------------------------
 // File : flo.cg
 //----------------------------------------------------------------------------
@@ -15,7 +21,7 @@
 // representations about the suitability of this software for any purpose.
 // It is provided "as is" without express or implied warranty.
 
-#include "floUtil.cg" // for texRECTBilerp() and texRECTneighbors()
+#include "floUtil.cginc" // for texRECTBilerp() and texRECTneighbors()
 
 
 //----------------------------------------------------------------------------
@@ -29,7 +35,7 @@
  * forward to the starting point.  It performs bilinear interpolation at the
  * destination to get a smooth resulting field.
  */
-float4 advect(float2      coords : WPOS,
+float4 advect(float2      coords : WPOS,  // Pixel position
       uniform float       timestep,
       uniform float       dissipation, // mass dissipation constant.
       uniform float       rdx,         // 1 / grid scale.
@@ -93,7 +99,7 @@ void divergence(half2       coords  : WPOS,  // grid coordinates
            out  half4       div     : COLOR, // divergence (output)
 
         uniform half        halfrdx,         // 0.5 / gridscale
-        uniform samplerRECT w)               // vector field
+        uniform sampler2D w)               // vector field
 {
   half4 vL, vR, vB, vT;
   h4texRECTneighbors(w, coords, vL, vR, vB, vT);
@@ -132,18 +138,14 @@ void divergence(half2       coords  : WPOS,  // grid coordinates
  */
 void jacobi(half2       coords : WPOS,
         out half4       xNew   : COLOR,
-
     uniform half        alpha,
     uniform half        rBeta, // reciprocal beta
-    uniform samplerRECT x,     // x vector (Ax = b)
-    uniform samplerRECT b)     // b vector (Ax = b)
+    uniform sampler2D x,     // x vector (Ax = b)
+    uniform sampler2D b)     // b vector (Ax = b)
 {
-
   half4 xL, xR, xB, xT;
   h4texRECTneighbors(x, coords, xL, xR, xB, xT);
-
   half4 bC = h4texRECT(b, coords);
-
   xNew = (xL + xR + xB + xT + alpha * bC) * rBeta;
 }
 
@@ -174,17 +176,13 @@ void jacobi(half2       coords : WPOS,
  */
 void gradient(half2       coords  : WPOS,  // grid coordinates
           out half4       uNew    : COLOR, // divergence (output)//hvfFlo IN,
-
       uniform half        halfrdx,         // 0.5 / grid scale
-      uniform samplerRECT p,               // pressure
-      uniform samplerRECT w)               // velocity
+      uniform sampler2D p,               // pressure
+      uniform sampler2D w)               // velocity
 {
   half pL, pR, pB, pT;
-
   h1texRECTneighbors(p, coords, pL, pR, pB, pT);
-
   half2 grad = half2(pR - pL, pT - pB) * halfrdx;
-
   uNew = h4texRECT(w, coords);
   uNew.xy -= grad;
 }
@@ -219,7 +217,7 @@ void boundary(half2       coords : WPOS,
               half2       offset : TEX1,
           out half4       bv     : COLOR,
       uniform half        scale,
-      uniform samplerRECT x)
+      uniform sampler2D x)
 {
   bv = scale * h4texRECT(x, coords + offset);
 }
@@ -262,8 +260,8 @@ void boundary(half2       coords : WPOS,
  */
 void updateOffsets(half2       coords : WPOS,
                out half4       offsets : COLOR,
-           uniform samplerRECT b,
-           uniform samplerRECT offsetTable)
+           uniform sampler2D b,
+           uniform sampler2D offsetTable)
 {
   // get neighboring boundary values (on or off)
   half bW, bE, bN, bS;
@@ -294,8 +292,8 @@ void updateOffsets(half2       coords : WPOS,
  */
 void arbitraryVelocityBoundary(half2       coords : WPOS,
                            out half4       uNew   : COLOR,
-                       uniform samplerRECT u,
-                       uniform samplerRECT offsets)
+                       uniform sampler2D u,
+                       uniform sampler2D offsets)
 {
   // get scale and offset = (uScale, uOffset, vScale, vOffset)
   half4 scaleoffset = h4texRECT(offsets, coords);
@@ -318,8 +316,8 @@ void arbitraryVelocityBoundary(half2       coords : WPOS,
  */
 void arbitraryPressureBoundary(half2       coords : WPOS,
                            out half4       pNew   : COLOR,
-                       uniform samplerRECT p,
-                       uniform samplerRECT offsets)
+                       uniform sampler2D p,
+                       uniform sampler2D offsets)
 {
   // get the two neighboring pressure offsets
   // they will be the same if this is N, E, W, or S, different if NE, SE, etc.
@@ -369,13 +367,11 @@ void arbitraryPressureBoundary(half2       coords : WPOS,
  */
 void vorticity(half2       coords : WPOS,
            out half        vort   : COLOR,
-
        uniform half        halfrdx, // 0.5 / gridscale
-       uniform samplerRECT u)       // velocity
+       uniform sampler2D u)       // velocity
 {
   half4 uL, uR, uB, uT;
   h4texRECTneighbors(u, coords, uL, uR, uB, uT);
-
   vort = halfrdx * ((uR.y - uL.y) - (uT.x - uB.x));
 }
 
@@ -391,31 +387,24 @@ void vorticity(half2       coords : WPOS,
     velocity field.
  */
 void vortForce(half2       coords : WPOS,
-
            out half2       uNew   : COLOR,
-
        uniform half        halfrdx,  // 0.5 / gridscale
        uniform half2       dxscale,  // vorticity confinement scale
        uniform half        timestep,
-       uniform samplerRECT vort,     // vorticity
-       uniform samplerRECT u)        // velocity
+       uniform sampler2D vort,     // vorticity
+       uniform sampler2D u)        // velocity
 {
   half vL, vR, vB, vT, vC;
   h1texRECTneighbors(vort, coords, vL, vR, vB, vT);
-
   vC = h1texRECT(vort, coords);
-
   half2 force = halfrdx * half2(abs(vT) - abs(vB), abs(vR) - abs(vL));
 
   // safe normalize
   static const half EPSILON = 2.4414e-4; // 2^-12
   half magSqr = max(EPSILON, dot(force, force));
   force = force * rsqrt(magSqr);
-
   force *= dxscale * vC * half2(1, -1);
-
   uNew = h2texRECT(u, coords);
-
   uNew += timestep * force;
 }
 
@@ -439,44 +428,42 @@ void vortForce(half2       coords : WPOS,
 // displayScalar
 void displayScalar(half2       coords : TEX0,
                out half4       color  : COLOR,
-
            uniform half4       scale,
            uniform half4       bias,
-           uniform samplerRECT texture)
+           uniform sampler2D tex)
 {
-  color = bias + scale * h4texRECT(texture, coords).xxxx;
+  color = bias + scale * h4texRECT(tex, coords).xxxx;
 }
 
 // displayVector
 void displayVector(half2       coords : TEX0,
                out half4       color  : COLOR,
-
            uniform half4       scale,
            uniform half4       bias,
-           uniform samplerRECT texture)
+           uniform sampler2D tex)
 {
-  color = bias + scale * h4texRECT(texture, coords);
+  color = bias + scale * h4texRECT(tex, coords);
 }
 
 // displayScalarBilerp
 void displayScalarBilerp(half2       coords : TEX0,
                      out half4       color : COLOR,
-
                  uniform half4       scale,
                  uniform half4       bias,
-                 uniform samplerRECT texture)
+                 uniform sampler2D tex)
 {
-  color = bias + scale * h1texRECTbilerp(texture, coords);
+  color = bias + scale * h1texRECTbilerp(tex, coords);
 }
 
 // displayVectorBilerp
 void displayVectorBilerp(half2       coords : TEX0,
-
                      out half4       color : COLOR,
-
                  uniform half4       scale,
                  uniform half4       bias,
-                 uniform samplerRECT texture)
+                 uniform sampler2D tex)
 {
-  color = bias + scale * h4texRECTbilerp(texture, coords);
+  color = bias + scale * h4texRECTbilerp(tex, coords);
 }
+
+
+#endif

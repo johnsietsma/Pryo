@@ -1,3 +1,9 @@
+#ifndef FLO_UTIL_CG_INCLUDED
+#define FLO_UTIL_CG_INCLUDED
+
+
+// Upgrade NOTE: replaced 'samplerRECT' with 'sampler2D'
+
 //----------------------------------------------------------------------------
 // File : floUtil.cg
 //----------------------------------------------------------------------------
@@ -22,6 +28,13 @@
 
 // basic vertex-fragment connectors.
 
+
+// The texel size of the simulation.
+// This must be set by the user
+uniform float2 FloTexelSize = float2(1/512,1/512);
+
+
+
 struct fvfFlo
 {
   float4 TEX0;
@@ -37,15 +50,40 @@ struct hvfFlo
 };
 
 
-// tex2D in screen space
+
+// ---- JPS ----
+// Unity doesn't support Rect samplers, these are wrappers that use 2D samplers instead.
+// Eventually these should be renamed, or rolled back into the code.
+
+// s should be in texel space
 float4 f4texRECT(sampler2D tex, float2 s)
 {
-  return tex2D( tex, float2(s.x/_ScreenParams.x, s.y/_ScreenParams.y) );
+  return tex2D( tex, s / FloTexelSize );
 }
 
+half4 h4texRECT(sampler2D tex, half2 s)
+{
+  return tex2D( tex, s / FloTexelSize);
+}
+
+half h1texRECT(sampler2D tex, half2 s)
+{
+	return (half)tex2D( tex, s / FloTexelSize);
+}
+
+half2 h2texRECT(sampler2D tex, half2 s)
+{
+	return (half2)tex2D( tex, s / FloTexelSize);
+}
+
+float f1texRECT(sampler2D tex, half2 s)
+{
+	return (float)tex2D( tex, s / FloTexelSize);
+}
+// ---- End JPS ----
 
 
-void h4texRECTneighbors(samplerRECT tex, half2 s,
+void h4texRECTneighbors(sampler2D tex, half2 s,
                         out half4 left,
                         out half4 right,
                         out half4 bottom,
@@ -57,7 +95,7 @@ void h4texRECTneighbors(samplerRECT tex, half2 s,
   top    = h4texRECT(tex, s + half2(0, 1));
 }
 
-void h1texRECTneighbors(samplerRECT tex, half2 s,
+void h1texRECTneighbors(sampler2D tex, half2 s,
                         out half left,
                         out half right,
                         out half bottom,
@@ -70,7 +108,7 @@ void h1texRECTneighbors(samplerRECT tex, half2 s,
 }
 
 
-void f4texRECTneighbors(samplerRECT tex, float2 s,
+void f4texRECTneighbors(sampler2D tex, float2 s,
                         out float4 left,
                         out float4 right,
                         out float4 bottom,
@@ -82,7 +120,7 @@ void f4texRECTneighbors(samplerRECT tex, float2 s,
   top    = f4texRECT(tex, s + float2(0, 1));
 }
 
-void f1texRECTneighbors(samplerRECT tex, float2 s,
+void f1texRECTneighbors(sampler2D tex, float2 s,
                         out float left,
                         out float right,
                         out float bottom,
@@ -122,7 +160,7 @@ float4 f4texRECTbilerp(sampler2D tex, float2 s)
 }
 
 
-half4 h4texRECTbilerp(samplerRECT tex, half2 s)
+half4 h4texRECTbilerp(sampler2D tex, half2 s)
 {
   half4 st;
   st.xy = floor(s - 0.5) + 0.5;
@@ -139,7 +177,7 @@ half4 h4texRECTbilerp(samplerRECT tex, half2 s)
   return lerp(lerp(tex11, tex21, t.x), lerp(tex12, tex22, t.x), t.y);
 }
 
-half h1texRECTbilerp(samplerRECT tex, half2 s)
+half h1texRECTbilerp(sampler2D tex, half2 s)
 {
   half4 st;
   st.xy = floor(s - 0.5) + 0.5;
@@ -157,3 +195,5 @@ half h1texRECTbilerp(samplerRECT tex, half2 s)
   return lerp(texels.x, texels.y, t.y);
 }
 
+
+#endif

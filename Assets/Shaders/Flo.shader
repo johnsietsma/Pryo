@@ -11,28 +11,24 @@
 			LOD 200
 
 			CGPROGRAM
-			#include "flo.cg"
+			#include "flo.cginc"
 			#include "UnityCG.cginc"
 
 			#pragma vertex vert_img
 			#pragma fragment frag
 
 			sampler2D _MainTex;
+			float4 _MainTex_TexelSize;
 			sampler2D _VelocityField;
 			float _Dissipation;
 			float _GridScale;
 
-			struct Input {
-				float2 uv_MainTex;
-			};
-
-	        fixed4 frag(float4 sp:WPOS) : COLOR {
-	        	//float time = unity_DeltaTime;
-	        	float time = _Time;
-	        	float2 u = advect( sp, time, _Dissipation, 1/_GridScale, _VelocityField, _MainTex );
-	        	u = diffuse()
-	        	//float2 s = sp - sp * time * 1/_GridScale * f4texRECT(_VelocityField, sp);
-	        	//return _Dissipation * f4texRECTbilerp(_MainTex, s);
+	        fixed4 frag(v2f_img i) : COLOR {
+				float time = _Time;
+				//float time = unity_DeltaTime;
+				FloTexelSize = _MainTex_TexelSize.zw;
+				float2 sp = i.uv*FloTexelSize;
+				return advect( sp, time, _Dissipation, 1/_GridScale, _VelocityField, _MainTex );
 	        }
 
 			ENDCG
